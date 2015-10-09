@@ -1,0 +1,18 @@
+{
+	"name": "looger",
+	"version": "1.0.0",
+	"description": "Simple logging wrapper for winston",
+	"keywords": [ "log", "winston" ],
+	"license": "MIT",
+	"author": "Tommy Montgomery <tmont@tmont.com> (http://tmont.com/)",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/tmont/looger.git"
+	},
+	"dependencies": {
+		"async": "1.4.2",
+		"chalk": "1.1.1",
+		"extend": "3.0.0",
+		"winston": "1.0.2"
+	}
+}
