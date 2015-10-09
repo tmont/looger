@@ -81,7 +81,7 @@ Logger.create = function(config) {
 
 function log(level) {
 	return function() {
-		var message =[].slice.call(arguments).map(function(arg) {
+		var message = [].slice.call(arguments).map(function(arg) {
 			if (typeof(arg) === 'object') {
 				var message = util.inspect(arg, false, 5, true);
 				if (arg && arg.stack) {
