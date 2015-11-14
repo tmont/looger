@@ -10,9 +10,9 @@
 		"url": "https://github.com/tmont/looger.git"
 	},
 	"dependencies": {
-		"async": "1.4.2",
+		"async": "1.5.0",
 		"chalk": "1.1.1",
 		"extend": "3.0.0",
-		"winston": "1.0.2"
+		"winston": "2.1.0"
 	}
 }
