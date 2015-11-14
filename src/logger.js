@@ -11,10 +11,6 @@ function Logger(logger, options) {
 	this.showPid = !!options.showPid;
 	this.logger = logger;
 	this.prefix = options.prefix || '';
-
-	this.logger.on('error', function(err) {
-		console.error('Error while logging', err);
-	});
 }
 
 Logger.levels = {
@@ -73,7 +69,8 @@ Logger.create = function(config) {
 	var logger = new winston.Logger({
 		level: config.level,
 		levels: Logger.levels,
-		transports: transports
+		transports: transports,
+		emitErrs: false
 	});
 
 	return new Logger(logger, config);
