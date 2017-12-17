@@ -1,6 +1,9 @@
 # looger
 A simple logging class with no dependencies. Requires Node `v8.0.0` or higher.
 
+[![Build Status](https://travis-ci.org/tmont/looger.svg?branch=master)](https://travis-ci.org/tmont/looger)
+[![NPM version](https://img.shields.io/npm/v/looger.svg)](https://www.npmjs.com/package/looger)
+
 ## Installation
 ```bash
 npm install looger
