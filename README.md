@@ -1,6 +1,5 @@
 # looger
-A simple wrapper for the winston logging library. This is mostly just for
-my own internal use.
+A simple logging class with no dependencies. Requires Node `v8.0.0` or higher.
 
 ## Installation
 ```bash
@@ -8,39 +7,68 @@ npm install looger
 ```
 
 ## Usage
-`looger` comes prewired to log to the console. It also comes with a semi-intelligent
-syslog transport.
+`looger` comes prewired to log to stdout. If you want to do something
+else, you can either pass in a `writer` object or subclass `Looger`
+and override the `write()` method.
 
 ```javascript
-var looger = require('looger');
-
-// with default console transport
-var log = looger.Logger.create({
-	level: 'info',
-	timestamps: 'quiet'
-});
-
-// using an existing winston logger
-var winston = require('winston');
-var logger = new winston.Logger({
-	level: 'info',
-	transports: [
-		new looger.transports.Console({
-			timestamp: true,
-			level: 'info',
-			colorize: true
-		})
-	]
-});
-var log = new looger.Logger(logger);
+// for TypeScript, import with this:
+// import Looger = require('looger');
+const Looger = require('looger');
+const looger = new Looger();
+looger.info('hello world'); // 09:52:27.338 [info] hello world
 ```
 
-Normal log methods exist:
+Available logging methods:
+```javascript
+looger.trace(/* any number of objects */);
+looger.debug(/* any number of objects */);
+looger.info(/* any number of objects */);
+looger.warn(/* any number of objects */);
+looger.error(/* any number of objects */);
+
+if (looger.isDebugEnabled()) {
+  // expensive debug logging here
+}
+```
+
+Integration with Express middleware:
 
 ```javascript
-log.trace(/* any object or string */);
-log.debug(/* any object or string */);
-log.info(/* any object or string */);
-log.warn(/* any object or string */);
-log.error(/* any object or string */);
+const express = require('express');
+const app = express();
+
+app.use(logger.middleware());
+
+// logged for every incoming request:
+// [info] GET / HTTP/1.1
+// logged for every outgoing response:
+// [debug] 5ms 200 GET / HTTP/1.1
+```
+
+### Options
+```javascript
+{
+  // colorize log levels and output	
+  colorize: Boolean, // default is true
+  // log level
+  level: 'trace' | 'debug' | 'info' | 'warn' | 'error', //default is "info"
+  // how deep to print nested objects
+  maxDepth: Number, // default is 3
+  // how to format the time
+  timestamps: Boolean | 'simple', // default is "simple"
+  // where to write log lines
+  writer: { write: (str) => {} } // default is process.stdout
+}
+```
+
+For normal development, these options are recommended:
+
+```javascript
+const looger = new Looger({
+  colorize: true,
+  level: 'debug',
+  recursionDepth: 5,
+  timestamps: 'simple'
+});
 ```

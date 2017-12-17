@@ -1,18 +1,27 @@
 {
 	"name": "looger",
 	"version": "1.1.2",
-	"description": "Simple logging wrapper for winston",
-	"keywords": [ "log", "winston" ],
+	"description": "Simple logger",
+	"keywords": [ "log" ],
 	"license": "MIT",
 	"author": "Tommy Montgomery <tmont@tmont.com> (http://tmont.com/)",
+	"files": [
+		"index.js",
+		"index.d.ts"
+	],
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/tmont/looger.git"
 	},
-	"dependencies": {
-		"async": "1.5.2",
-		"chalk": "1.1.3",
-		"extend": "3.0.0",
-		"winston": "2.2.0"
-	}
+	"scripts": {
+		"test": "node_modules/.bin/mocha -R spec -t 5000 tests"
+	},
+	"devDependencies": {
+		"expect.js": "0.3.1",
+		"express": "4.16.2",
+		"mocha": "4.0.1",
+		"sinon": "4.1.3",
+		"typescript": "2.6.2"
+	},
+	"types": "./index.d.ts"
 }
