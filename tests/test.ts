@@ -14,6 +14,12 @@ if (looger.isDebugEnabled()) {
 }
 
 const middleware = looger.middleware();
+looger.middleware(2000);
 middleware({}, {}, (err) => {
 	console.log(err);
 });
+
+const noop = Looger.noop;
+noop.error('this will not show up');
+
+looger.enabled = true;

@@ -15,6 +15,9 @@ declare class Looger {
 	public readonly maxDepth: number;
 	public readonly timestamps: boolean | 'simple';
 	public readonly writer: { write: (str) => void };
+	public enabled: boolean;
+
+	public static readonly noop: Looger;
 
 	constructor(options?: LoogerOptions)
 
@@ -33,7 +36,7 @@ declare class Looger {
 	public warn(...messages: any[]): void;
 	public error(...messages: any[]): void;
 	public isDebugEnabled(): boolean;
-	public middleware(): (req: any, res: any, next: (err?: any) => void) => void;
+	public middleware(slowThreshold?: number): (req: any, res: any, next: (err?: any) => void) => void;
 }
 
 export = Looger;

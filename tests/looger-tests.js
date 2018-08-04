@@ -43,6 +43,29 @@ describe('Looger', () => {
 		it('should set timestamps to "simple"', () => {
 			expect(looger).to.have.property('timestamps', 'simple');
 		});
+
+		it('should set enabled to "true"', () => {
+			expect(looger).to.have.property('enabled', true);
+		});
+	});
+
+	describe('disabling', () => {
+		it('should not log anything if "enabled" is false', () => {
+			const test = (looger) => {
+				looger.trace('hello world');
+				looger.debug('hello world');
+				looger.info('hello world');
+				looger.warn('hello world');
+				looger.error('hello world');
+
+				expect(writer.write.callCount).to.equal(0);
+			};
+
+			test(new Looger({ enabled: false, writer }));
+			const looger = new Looger({ writer });
+			looger.enabled = false;
+			test(looger);
+		});
 	});
 
 	describe('message formatting without color', () => {
@@ -460,13 +483,13 @@ describe('Looger', () => {
 
 			sendRequest(() => {
 				expect(writer.write.callCount).to.equal(2);
-				expect(writer.write.getCall(0).args[0]).to.equal('[\u001b[32minfo\u001b[0m] GET / HTTP/1.1\n');
-				expect(writer.write.getCall(1).args[0]).to.match(/^\[\u001b\[36mdebug\u001b\[0m] \d+ms \u001b\[32m200\u001b\[0m GET \/ HTTP\/1\.1\n$/);
+				expect(writer.write.getCall(0).args[0]).to.equal('[\u001b[36mdebug\u001b[0m] GET / HTTP/1.1\n');
+				expect(writer.write.getCall(1).args[0]).to.match(/^\[\u001b\[32minfo\u001b\[0m] \d+ms \u001b\[32m200\u001b\[0m GET \/ HTTP\/1\.1\n$/);
 				done();
 			});
 		});
 
-		it('should log request but not response for "info" level', (done) => {
+		it('should log response but not request for "info" level', (done) => {
 			looger = new Looger({
 				colorize: true,
 				level: 'info',
@@ -476,7 +499,7 @@ describe('Looger', () => {
 
 			sendRequest(() => {
 				expect(writer.write.callCount).to.equal(1);
-				expect(writer.write.getCall(0).args[0]).to.equal('[\u001b[32minfo\u001b[0m] GET / HTTP/1.1\n');
+				expect(writer.write.getCall(0).args[0]).to.match(/^\[\u001b\[32minfo\u001b\[0m] \d+ms \u001b\[32m200\u001b\[0m GET \/ HTTP\/1\.1\n$/);
 				done();
 			});
 		});

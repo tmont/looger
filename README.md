@@ -44,9 +44,9 @@ const app = express();
 app.use(logger.middleware());
 
 // logged for every incoming request:
-// [info] GET / HTTP/1.1
+// [debug] GET / HTTP/1.1
 // logged for every outgoing response:
-// [debug] 5ms 200 GET / HTTP/1.1
+// [info] 5ms 200 GET / HTTP/1.1
 ```
 
 ### Options

@@ -31,6 +31,15 @@ class Looger {
 			3;
 		this.timestamps = ('timestamps' in options) ? options.timestamps : 'simple';
 		this.writer = options.writer || process.stdout;
+		this.isEnabled = typeof(options.enabled) === 'boolean' ? options.enabled : true;
+	}
+
+	get enabled() {
+		return this.isEnabled;
+	}
+
+	set enabled(isEnabled) {
+		this.isEnabled = !!isEnabled;
 	}
 
 	write(str) {
@@ -120,6 +129,10 @@ class Looger {
 	}
 
 	log(levelName, ...messages) {
+		if (!this.enabled) {
+			return;
+		}
+
 		const level = levelMap[levelName] || Infinity;
 		if (this.level <= level) {
 			const combinedObjects = messages
@@ -156,28 +169,26 @@ class Looger {
 		return this.level <= levelMap.debug;
 	}
 
-	middleware() {
+	middleware(slowThreshold = 500) {
 		return (req, res, next) => {
 			const signature = `${req.method} ${req.url} HTTP/${req.httpVersion}`;
 			const start = Date.now();
 
-			this.info(signature);
+			this.debug(signature);
 
-			if (!this.isDebugEnabled()) {
-				next();
-				return;
-			}
+			const kindaSlowThreshold = slowThreshold / 2;
+			const mehSlowThreshold = slowThreshold / 5;
 
 			res.on('finish', () => {
 				let elapsed = Date.now() - start;
 				let elapsedColor = '';
 				let status = res.statusCode;
 				if (this.colorize) {
-					if (elapsed >= 500) {
+					if (elapsed >= slowThreshold) {
 						elapsedColor = 'red';
-					} else if (elapsed >= 250) {
+					} else if (elapsed >= kindaSlowThreshold) {
 						elapsedColor = 'magenta';
-					} else if (elapsed >= 100) {
+					} else if (elapsed >= mehSlowThreshold) {
 						elapsedColor = 'cyan';
 					}
 
@@ -195,12 +206,18 @@ class Looger {
 					elapsed = this.colorWrap(elapsedColor, elapsed);
 				}
 
-				this.debug(`${elapsed} ${status} ${signature}`);
+				this.info(`${elapsed} ${status} ${signature}`);
 			});
 
 			next();
 		};
 	}
 }
+
+Object.defineProperty(Looger, 'noop', {
+	value: new Looger({
+		writer: { write: () => {} }
+	})
+});
 
 module.exports = Looger;
