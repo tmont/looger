@@ -19,7 +19,7 @@ and override the `write()` method.
 // import Looger = require('looger');
 const Looger = require('looger');
 const looger = new Looger();
-looger.info('hello world'); // 09:52:27.338 [info] hello world
+looger.info('hello world'); // 09:52:27.338 info: hello world
 ```
 
 Available logging methods:
@@ -44,9 +44,9 @@ const app = express();
 app.use(logger.middleware());
 
 // logged for every incoming request:
-// [debug] GET / HTTP/1.1
+// debug: GET / HTTP/1.1
 // logged for every outgoing response:
-// [info] 5ms 200 GET / HTTP/1.1
+// info: 5ms 200 GET / HTTP/1.1
 ```
 
 ### Options

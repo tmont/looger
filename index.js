@@ -86,7 +86,7 @@ class Looger {
 
 	formatLevel(levelName) {
 		if (!this.colorize) {
-			return `[${levelName}] `;
+			return `${levelName}: `;
 		}
 
 		let color = null;
@@ -99,7 +99,7 @@ class Looger {
 			case 'error': color = 'red'; break;
 		}
 
-		return '[' + this.colorWrap(color, levelName) + '] ';
+		return this.colorWrap(color, levelName + ':') + ' ';
 	}
 
 	formatTimestamp(date) {

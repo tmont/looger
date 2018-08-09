@@ -264,7 +264,7 @@ describe('Looger', () => {
 			const verifyLevel = (level, callCount) => {
 				callCount = callCount || 1;
 				expect(writer.write.callCount).to.equal(callCount);
-				expect(writer.write.getCall(callCount - 1).args[0].substring(0, level.length + 3)).to.equal(`[${level}] `);
+				expect(writer.write.getCall(callCount - 1).args[0].substring(0, level.length + 2)).to.equal(`${level}: `);
 			};
 			it('should log "trace" level', () => {
 				looger = new Looger({
@@ -372,8 +372,8 @@ describe('Looger', () => {
 				callCount = callCount || 1;
 				expect(writer.write.callCount).to.equal(callCount);
 				const logLine = writer.write.getCall(callCount - 1).args[0];
-				const expected = `[${color}${level}\u001b[0m] `;
-				expect(logLine.substring(0, level.length + color.length + 7)).to.equal(expected);
+				const expected = `${color}${level}:\u001b[0m `;
+				expect(logLine.substring(0, level.length + color.length + 6)).to.equal(expected);
 			};
 
 			it('should log "trace" level', () => {
@@ -483,8 +483,8 @@ describe('Looger', () => {
 
 			sendRequest(() => {
 				expect(writer.write.callCount).to.equal(2);
-				expect(writer.write.getCall(0).args[0]).to.equal('[\u001b[36mdebug\u001b[0m] GET / HTTP/1.1\n');
-				expect(writer.write.getCall(1).args[0]).to.match(/^\[\u001b\[32minfo\u001b\[0m] \d+ms \u001b\[32m200\u001b\[0m GET \/ HTTP\/1\.1\n$/);
+				expect(writer.write.getCall(0).args[0]).to.equal('\u001b[36mdebug:\u001b[0m GET / HTTP/1.1\n');
+				expect(writer.write.getCall(1).args[0]).to.match(/^\u001b\[32minfo:\u001b\[0m \d+ms \u001b\[32m200\u001b\[0m GET \/ HTTP\/1\.1\n$/);
 				done();
 			});
 		});
@@ -499,7 +499,7 @@ describe('Looger', () => {
 
 			sendRequest(() => {
 				expect(writer.write.callCount).to.equal(1);
-				expect(writer.write.getCall(0).args[0]).to.match(/^\[\u001b\[32minfo\u001b\[0m] \d+ms \u001b\[32m200\u001b\[0m GET \/ HTTP\/1\.1\n$/);
+				expect(writer.write.getCall(0).args[0]).to.match(/^\u001b\[32minfo:\u001b\[0m \d+ms \u001b\[32m200\u001b\[0m GET \/ HTTP\/1\.1\n$/);
 				done();
 			});
 		});
