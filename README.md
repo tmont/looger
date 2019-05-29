@@ -41,7 +41,13 @@ Integration with Express middleware:
 const express = require('express');
 const app = express();
 
-app.use(logger.middleware());
+app.use(logger.middleware({
+    userAgent: false, // set to true to log user agent
+    requestSize: false, // set to true to log request size
+    responseSize: false, // set to true to log request size
+    response4xxLevel: 'info', // log 4xx responses at this level
+    response5xxLevel: 'info', // log 5xx responses at this level
+}));
 
 // logged for every incoming request:
 // debug: GET / HTTP/1.1

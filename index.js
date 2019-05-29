@@ -169,9 +169,27 @@ class Looger {
 		return this.level <= levelMap.debug;
 	}
 
-	middleware(slowThreshold = 500) {
+	middleware(options = {}) {
+		if (typeof(options) === 'number') {
+			options = {
+				slowThreshold: options
+			};
+		}
+
+		const slowThreshold = options.slowThreshold || 500;
+		const logUserAgent = options.userAgent === true;
+		const logRequestSize = options.requestSize === true;
+		const logResponseSize = options.responseSize === true;
+		const response4xxLevel = options.response4xxLevel || 'info';
+		const response5xxLevel = options.response5xxLevel || 'info';
+
 		return (req, res, next) => {
-			const signature = `${req.method} ${req.url} HTTP/${req.httpVersion}`;
+			const userAgent = req.get('user-agent');
+			const requestSize = req.get('content-length') || (req.socket && req.socket.bytesRead);
+			const signature = `${req.method} ${req.url} HTTP/${req.httpVersion}` +
+				`${logUserAgent ? ' ' + (userAgent || 'n/a') : ''}` +
+				`${logRequestSize ? ' req:' + requestSize : ''}`;
+
 			const start = Date.now();
 
 			this.debug(signature);
@@ -180,9 +198,11 @@ class Looger {
 			const mehSlowThreshold = slowThreshold / 5;
 
 			res.on('finish', () => {
+				const responseSize = res.get('content-length') || 0;
 				let elapsed = Date.now() - start;
 				let elapsedColor = '';
 				let status = res.statusCode;
+
 				if (this.colorize) {
 					if (elapsed >= slowThreshold) {
 						elapsedColor = 'red';
@@ -206,7 +226,24 @@ class Looger {
 					elapsed = this.colorWrap(elapsedColor, elapsed);
 				}
 
-				this.info(`${elapsed} ${status} ${signature}`);
+				const message = `${elapsed} ${status} ${signature}` +
+					`${logResponseSize ? ' res:' + responseSize : ''}`;
+
+				if (res.statusCode < 400) {
+					this.info(message);
+				} else if (res.statusCode < 500) {
+					if (typeof(this[response4xxLevel]) === 'function') {
+						this[response4xxLevel](message);
+					} else {
+						this.info(message);
+					}
+				} else {
+					if (typeof (this[response5xxLevel]) === 'function') {
+						this[response5xxLevel](message);
+					} else {
+						this.info(message);
+					}
+				}
 			});
 
 			next();

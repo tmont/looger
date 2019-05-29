@@ -37,6 +37,14 @@ declare class Looger {
 	public error(...messages: any[]): void;
 	public isDebugEnabled(): boolean;
 	public middleware(slowThreshold?: number): (req: any, res: any, next: (err?: any) => void) => void;
+	public middleware(options?: {
+		slowThreshold?: number;
+		userAgent?: boolean;
+		requestSize?: boolean;
+		responseSize?: boolean;
+		response4xxLevel?: LogLevel;
+		response5xxLevel?: LogLevel;
+	}): (req: any, res: any, next: (err?: any) => void) => void;
 }
 
 export = Looger;

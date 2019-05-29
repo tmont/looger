@@ -445,6 +445,9 @@ describe('Looger', () => {
 
 		beforeEach(() => {
 			app = express();
+			app.use(express.urlencoded({
+				extended: true,
+			}));
 			server = app.listen(port);
 		});
 
@@ -460,17 +463,46 @@ describe('Looger', () => {
 			});
 		});
 
-		const sendRequest = (callback) => {
-			app.use(looger.middleware());
-			app.all(/.*/, (req, res) => {
+		const sendRequest = (options, method, pathname, callback) => {
+			app.use(looger.middleware(options));
+			app.get('/404', (req, res) => {
+				res.sendStatus(404);
+			});
+			app.get('/500', (req, res) => {
+				res.sendStatus(500);
+			});
+			app.get('/', (req, res) => {
 				res.send('ok');
 			});
-			http.get(`http://localhost:${port}/`, (res) => {
+			app.post('/', (req, res) => {
+				res.send('ok');
+			});
+
+			const reqOptions = {
+				hostname: 'localhost',
+				port,
+				path: pathname,
+				method,
+				headers: {
+					'User-Agent': 'looger/1.0'
+				}
+			};
+
+			if (method === 'POST') {
+				reqOptions.headers['Content-Type'] = 'application/x-www-form-urlencoded';
+			}
+
+			const req = http.request(reqOptions, (res) => {
 				res.on('data', () => {});
 				res.on('end', () => {
 					callback();
 				});
 			});
+
+			if (method === 'POST') {
+				req.write('foo=bar');
+			}
+			req.end();
 		};
 
 		it('should log request and response for "debug" level', (done) => {
@@ -481,10 +513,12 @@ describe('Looger', () => {
 				writer
 			});
 
-			sendRequest(() => {
+			sendRequest({}, 'GET', '/', () => {
 				expect(writer.write.callCount).to.equal(2);
-				expect(writer.write.getCall(0).args[0]).to.equal('\u001b[36mdebug:\u001b[0m GET / HTTP/1.1\n');
-				expect(writer.write.getCall(1).args[0]).to.match(/^\u001b\[32minfo:\u001b\[0m \d+ms \u001b\[32m200\u001b\[0m GET \/ HTTP\/1\.1\n$/);
+				expect(writer.write.getCall(0).args[0])
+					.to.equal('\u001b[36mdebug:\u001b[0m GET / HTTP/1.1\n');
+				expect(writer.write.getCall(1).args[0])
+					.to.match(/^\u001b\[32minfo:\u001b\[0m \d+ms \u001b\[32m200\u001b\[0m GET \/ HTTP\/1\.1\n$/);
 				done();
 			});
 		});
@@ -497,9 +531,132 @@ describe('Looger', () => {
 				writer
 			});
 
-			sendRequest(() => {
+			sendRequest({}, 'GET', '/', () => {
 				expect(writer.write.callCount).to.equal(1);
-				expect(writer.write.getCall(0).args[0]).to.match(/^\u001b\[32minfo:\u001b\[0m \d+ms \u001b\[32m200\u001b\[0m GET \/ HTTP\/1\.1\n$/);
+				expect(writer.write.getCall(0).args[0])
+					.to.match(/^\u001b\[32minfo:\u001b\[0m \d+ms \u001b\[32m200\u001b\[0m GET \/ HTTP\/1\.1\n$/);
+				done();
+			});
+		});
+
+		it('should log response size', (done) => {
+			looger = new Looger({
+				colorize: true,
+				level: 'info',
+				timestamps: false,
+				writer
+			});
+
+			const options = {
+				responseSize: true
+			};
+
+			sendRequest(options, 'GET', '/', () => {
+				expect(writer.write.callCount).to.equal(1);
+				expect(writer.write.getCall(0).args[0])
+					.to.match(/^\u001b\[32minfo:\u001b\[0m \d+ms \u001b\[32m200\u001b\[0m GET \/ HTTP\/1\.1 res:2\n$/);
+				done();
+			});
+		});
+
+		it('should log request size', (done) => {
+			looger = new Looger({
+				colorize: true,
+				level: 'info',
+				timestamps: false,
+				writer
+			});
+
+			const options = {
+				requestSize: true
+			};
+
+			sendRequest(options, 'POST', '/', () => {
+				expect(writer.write.callCount).to.equal(1);
+				expect(writer.write.getCall(0).args[0])
+					.to.match(/^\u001b\[32minfo:\u001b\[0m \d+ms \u001b\[32m200\u001b\[0m POST \/ HTTP\/1\.1 req:179\n$/);
+				done();
+			});
+		});
+
+		it('should log user agent', (done) => {
+			looger = new Looger({
+				colorize: true,
+				level: 'info',
+				timestamps: false,
+				writer
+			});
+
+			const options = {
+				userAgent: true
+			};
+
+			sendRequest(options, 'GET', '/', () => {
+				expect(writer.write.callCount).to.equal(1);
+				expect(writer.write.getCall(0).args[0])
+					.to.match(/^\u001b\[32minfo:\u001b\[0m \d+ms \u001b\[32m200\u001b\[0m GET \/ HTTP\/1\.1 looger\/1\.0\n$/);
+				done();
+			});
+		});
+
+		it('should use custom log level for 4xx', (done) => {
+			looger = new Looger({
+				colorize: true,
+				level: 'info',
+				timestamps: false,
+				writer
+			});
+
+			const options = {
+				response4xxLevel: 'warn'
+			};
+
+			sendRequest(options, 'GET', '/404', () => {
+				expect(writer.write.callCount).to.equal(1);
+				expect(writer.write.getCall(0).args[0])
+					.to.match(/^\u001b\[33mwarn:\u001b\[0m \d+ms \u001b\[31m404\u001b\[0m GET \/404 HTTP\/1\.1\n$/);
+				done();
+			});
+		});
+
+		it('should use custom log level for 5xx', (done) => {
+			looger = new Looger({
+				colorize: true,
+				level: 'info',
+				timestamps: false,
+				writer
+			});
+
+			const options = {
+				response5xxLevel: 'error'
+			};
+
+			sendRequest(options, 'GET', '/500', () => {
+				expect(writer.write.callCount).to.equal(1);
+				expect(writer.write.getCall(0).args[0])
+					.to.match(/^\u001b\[31merror:\u001b\[0m \d+ms \u001b\[31m500\u001b\[0m GET \/500 HTTP\/1\.1\n$/);
+				done();
+			});
+		});
+
+		it('should log all options', (done) => {
+			looger = new Looger({
+				colorize: true,
+				level: 'info',
+				timestamps: false,
+				writer
+			});
+
+			const options = {
+				userAgent: true,
+				requestSize: true,
+				responseSize: true,
+			};
+
+			sendRequest(options, 'GET', '/', () => {
+				expect(writer.write.callCount).to.equal(1);
+				expect(writer.write.getCall(0).args[0])
+					.to.match(/^\u001b\[32minfo:\u001b\[0m \d+ms \u001b\[32m200\u001b\[0m GET \/ HTTP\/1\.1 looger\/1\.0 req:84 res:2\n$/);
 				done();
 			});
 		});

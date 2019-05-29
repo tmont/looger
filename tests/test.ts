@@ -15,6 +15,14 @@ if (looger.isDebugEnabled()) {
 
 const middleware = looger.middleware();
 looger.middleware(2000);
+looger.middleware({
+	requestSize: true,
+	response4xxLevel: 'warn',
+	response5xxLevel: 'error',
+	responseSize: false,
+	slowThreshold: 1290,
+	userAgent: true
+});
 middleware({}, {}, (err) => {
 	console.log(err);
 });
