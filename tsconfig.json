@@ -1,0 +1,38 @@
+{
+    "compileOnSave": false,
+    "compilerOptions": {
+        "allowJs": false,
+        "allowSyntheticDefaultImports": true,
+        "allowUnreachableCode": false,
+        "composite": false,
+        "declaration": true,
+        "esModuleInterop": true,
+        "forceConsistentCasingInFileNames": true,
+        "isolatedModules": false,
+        "moduleResolution": "node",
+        "noImplicitAny": true,
+        "noImplicitReturns": true,
+        "noUnusedLocals": true,
+        "noUnusedParameters": false,
+        "preserveConstEnums": true,
+        "resolveJsonModule": true,
+        "rootDir": ".",
+        "skipLibCheck": true,
+        "sourceMap": false,
+        "strictNullChecks": true,
+        "types": [
+            "node",
+            "mocha"
+        ],
+        "lib": [
+            "es2017"
+        ],
+        "module": "commonjs",
+        "target": "es2017",
+        "outDir": "dist"
+    },
+    "include": [
+        "index.ts"
+    ]
+}
+

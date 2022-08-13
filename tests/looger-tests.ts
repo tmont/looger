@@ -1,22 +1,23 @@
-const path = require('path');
-const exec = require('child_process').exec;
-const http = require('http');
-const expect = require('expect.js');
-const express = require('express');
-const sinon = require('sinon');
-const Looger = require('../');
+import express from 'express';
+import * as sinon from 'sinon';
+import * as http from 'http';
+import expect from 'expect.js';
+import {LogLevel, LogWriter, Looger, MiddlewareOptions} from '../';
 
-const escape = s => s.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+const escape = (s: string): string => s.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+
+type MockedWriter = Record<keyof LogWriter, sinon.SinonStub>;
 
 describe('Looger', () => {
-	let looger;
-	let writer;
+	let looger: Looger;
+	let writer: MockedWriter;
 
-	const verifyLogMessage = (message, callCount) => {
+	const verifyLogMessage = (message: string, callCount?: number): void => {
 		callCount = callCount || 1;
 		expect(writer.write.callCount).to.equal(callCount);
 		const regex = new RegExp(escape(message) + '\n$');
-		expect(writer.write.getCall(callCount - 1).args[0]).to.match(regex);
+		const msg = writer.write.getCall(callCount - 1).args[0];
+		expect(msg).to.match(regex);
 	};
 
 	beforeEach(() => {
@@ -51,7 +52,7 @@ describe('Looger', () => {
 
 	describe('disabling', () => {
 		it('should not log anything if "enabled" is false', () => {
-			const test = (looger) => {
+			const test = (looger: Looger) => {
 				looger.trace('hello world');
 				looger.debug('hello world');
 				looger.info('hello world');
@@ -97,10 +98,10 @@ describe('Looger', () => {
 		});
 
 		it('should format deep object literal and not recurse infinitely', () => {
-			const obj = {hello: {world: {foo: {bar: {baz: {bat: null}}}}}};
+			const obj: any = {hello: {world: {foo: {bar: {baz: {bat: null}}}}}};
 			obj.hello.world.foo.bar.baz.bat = obj;
 			looger.info(obj);
-			verifyLogMessage('{ hello: { world: { foo: { bar: [Object] } } } }');
+			verifyLogMessage('{\n  hello: { world: { foo: { bar: [Object] } } }\n}');
 		});
 
 		it('should format multiple arguments separately', () => {
@@ -261,7 +262,7 @@ describe('Looger', () => {
 
 	describe('level formatting', () => {
 		describe('without color', () => {
-			const verifyLevel = (level, callCount) => {
+			const verifyLevel = (level: LogLevel, callCount?: number): void => {
 				callCount = callCount || 1;
 				expect(writer.write.callCount).to.equal(callCount);
 				expect(writer.write.getCall(callCount - 1).args[0].substring(0, level.length + 2)).to.equal(`${level}: `);
@@ -368,7 +369,7 @@ describe('Looger', () => {
 		});
 
 		describe('with color', () => {
-			const verifyLevel = (level, color, callCount) => {
+			const verifyLevel = (level: LogLevel, color: string, callCount?: number) => {
 				callCount = callCount || 1;
 				expect(writer.write.callCount).to.equal(callCount);
 				const logLine = writer.write.getCall(callCount - 1).args[0];
@@ -439,8 +440,8 @@ describe('Looger', () => {
 	});
 
 	describe('express middleware', () => {
-		let server;
-		let app;
+		let server: http.Server | null = null;
+		let app: express.Application;
 		const port = 23456;
 
 		beforeEach(() => {
@@ -463,7 +464,12 @@ describe('Looger', () => {
 			});
 		});
 
-		const sendRequest = (options, method, pathname, callback) => {
+		const sendRequest = (
+			options: MiddlewareOptions,
+			method: 'GET' | 'POST',
+			pathname: string,
+			callback: () => void,
+		): void => {
 			app.use(looger.middleware(options));
 			app.get('/404', (req, res) => {
 				res.sendStatus(404);
@@ -478,18 +484,19 @@ describe('Looger', () => {
 				res.send('ok');
 			});
 
-			const reqOptions = {
+			const headers: http.RequestOptions['headers'] = {
+				'User-Agent': 'looger/1.0',
+			};
+			const reqOptions: http.RequestOptions = {
 				hostname: 'localhost',
 				port,
 				path: pathname,
 				method,
-				headers: {
-					'User-Agent': 'looger/1.0'
-				}
+				headers,
 			};
 
 			if (method === 'POST') {
-				reqOptions.headers['Content-Type'] = 'application/x-www-form-urlencoded';
+				headers['Content-Type'] = 'application/x-www-form-urlencoded';
 			}
 
 			const req = http.request(reqOptions, (res) => {
@@ -607,7 +614,7 @@ describe('Looger', () => {
 				writer
 			});
 
-			const options = {
+			const options: MiddlewareOptions = {
 				response4xxLevel: 'warn'
 			};
 
@@ -627,7 +634,7 @@ describe('Looger', () => {
 				writer
 			});
 
-			const options = {
+			const options: MiddlewareOptions = {
 				response5xxLevel: 'error'
 			};
 
@@ -647,7 +654,7 @@ describe('Looger', () => {
 				writer
 			});
 
-			const options = {
+			const options: MiddlewareOptions = {
 				userAgent: true,
 				requestSize: true,
 				responseSize: true,
@@ -657,21 +664,6 @@ describe('Looger', () => {
 				expect(writer.write.callCount).to.equal(1);
 				expect(writer.write.getCall(0).args[0])
 					.to.match(/^\u001b\[32minfo:\u001b\[0m \d+ms \u001b\[32m200\u001b\[0m GET \/ HTTP\/1\.1 looger\/1\.0 req:84 res:2\n$/);
-				done();
-			});
-		});
-	});
-
-	describe('TypeScript declarations', () => {
-		it('should successfully compile typescript without errors', (done) => {
-			const sourceFile = path.join(__dirname, 'test.ts');
-			const tsc = path.resolve(path.join(__dirname, '..', 'node_modules', '.bin', 'tsc'));
-			const cmd = `"${tsc}" --noEmit ${sourceFile}`;
-
-			exec(cmd, (err, stdout, stderr) => {
-				expect(stdout).to.equal('');
-				expect(stderr).equal('');
-				expect(err).to.equal(null);
 				done();
 			});
 		});

@@ -1,7 +1,6 @@
 # looger
-A simple logging class with no dependencies. Requires Node `v8.0.0` or higher.
+A simple logging class with no dependencies.
 
-[![Build Status](https://travis-ci.org/tmont/looger.svg?branch=master)](https://travis-ci.org/tmont/looger)
 [![NPM version](https://img.shields.io/npm/v/looger.svg)](https://www.npmjs.com/package/looger)
 
 ## Installation
@@ -11,13 +10,13 @@ npm install looger
 
 ## Usage
 `looger` comes prewired to log to stdout. If you want to do something
-else, you can either pass in a `writer` object or subclass `Looger`
-and override the `write()` method.
+else, you can either pass in a `writer` object or extend the `Looger`
+class and override the `write()` method.
 
 ```javascript
-// for TypeScript, import with this:
-// import Looger = require('looger');
-const Looger = require('looger');
+const {Looger} = require('looger');
+// import {Looger} from 'looger'; // for typescript
+
 const looger = new Looger();
 looger.info('hello world'); // 09:52:27.338 info: hello world
 ```
@@ -42,6 +41,7 @@ const express = require('express');
 const app = express();
 
 app.use(logger.middleware({
+    slowThreshold: 500, // use color to indicate a "slow" request beyond this threshold (in ms)
     userAgent: false, // set to true to log user agent
     requestSize: false, // set to true to log request size
     responseSize: false, // set to true to log request size
@@ -56,18 +56,25 @@ app.use(logger.middleware({
 ```
 
 ### Options
-```javascript
-{
-  // colorize log levels and output	
-  colorize: Boolean, // default is true
-  // log level
-  level: 'trace' | 'debug' | 'info' | 'warn' | 'error', //default is "info"
-  // how deep to print nested objects
-  maxDepth: Number, // default is 3
-  // how to format the time
-  timestamps: Boolean | 'simple', // default is "simple"
-  // where to write log lines
-  writer: { write: (str) => {} } // default is process.stdout
+```typescript
+interface LoogerOptions {
+    // colorize log levels and output
+    colorize?: boolean; // default is true
+    
+    // log level, "noop" means "don't log anything", see also Looger.noop
+    level?: 'trace' | 'debug' | 'info' | 'warn' | 'error' | 'noop'; // default is "info"
+    
+    // how deep to print nested objects
+    maxDepth?: number; // default is 3
+    
+    // how to format the time
+    timestamps?: boolean | 'simple'; // default is "simple"
+    
+    // where to write log lines
+    writer?: { write(msg: string): void }; // default is process.stdout
+    
+    // whether the logger is enabled. if false, then it's basically Looger.noop
+    enabled?: boolean; // default is true
 }
 ```
 
@@ -77,7 +84,7 @@ For normal development, these options are recommended:
 const looger = new Looger({
   colorize: true,
   level: 'debug',
-  recursionDepth: 5,
+  maxDepth: 5,
   timestamps: 'simple'
 });
 ```

@@ -4,24 +4,44 @@
 	"description": "Simple logger",
 	"keywords": [ "log" ],
 	"license": "MIT",
-	"author": "Tommy Montgomery <tmont@tmont.com> (http://tmont.com/)",
 	"files": [
-		"index.js",
-		"index.d.ts"
+        "dist/index.js",
+		"dist/index.d.ts"
 	],
+	"main": "dist/index.js",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/tmont/looger.git"
 	},
 	"scripts": {
-		"test": "node_modules/.bin/mocha -R spec -t 5000 tests"
+		"test": "node_modules/.bin/mocha",
+		"build": "node_modules/.bin/tsc"
 	},
 	"devDependencies": {
+		"@types/express": "4.17.13",
+		"@types/expect.js": "0.3.29",
+		"@types/mocha": "9.1.1",
+		"@types/node": "18.7.2",
+		"@types/sinon": "10.0.13",
 		"expect.js": "0.3.1",
-		"express": "4.17.1",
-		"mocha": "6.1.4",
-		"sinon": "7.3.2",
-		"typescript": "3.5.1"
+		"express": "4.18.1",
+		"mocha": "10.0.0",
+		"sinon": "14.0.0",
+		"ts-node": "10.9.1",
+		"typescript": "4.7.4"
 	},
-	"types": "./index.d.ts"
+	"types": "dist/index.d.ts",
+	"mocha": {
+		"extension": [
+			"ts"
+		],
+		"require": [
+			"ts-node/register",
+			"source-map-support/register"
+		],
+		"reporter": "dot",
+		"recursive": true,
+		"timeout": 5000,
+		"spec": "tests/*.ts"
+	}
 }
