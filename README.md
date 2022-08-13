@@ -13,9 +13,15 @@ npm install looger
 else, you can either pass in a `writer` object or extend the `Looger`
 class and override the `write()` method.
 
+Note: in v5.0.0 the export structure changed.
+
 ```javascript
 const {Looger} = require('looger');
 // import {Looger} from 'looger'; // for typescript
+
+// in versions < 5.0.0, do this instead:
+// const Looger = require('looger');
+// import Looger = require('looger'); // for typescript
 
 const looger = new Looger();
 looger.info('hello world'); // 09:52:27.338 info: hello world
